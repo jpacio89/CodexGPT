@@ -1,8 +1,8 @@
 <?php
 
-function fetch_arxiv_results($start) {
-    $url = 'https://arxiv.org/search/?query=a&searchtype=all&abstracts=show&order=announced_date_first&size=200&date-date_type=submitted_date&start=' . $start;
-    
+function fetch_arxiv_results($year, $start) {
+    $url = 'https://arxiv.org/search/?query=a&searchtype=all&abstracts=show&order=announced_date_first&size=200&date-date_type=submitted_date&date-year='.$year.'&start=' . $start;
+
     // Initialize cURL session
     $ch = curl_init($url);
     
@@ -80,14 +80,20 @@ function parse_html($html) {
 
 // Example usage
 $start = @file_get_contents('./data/last-search-start.log');
+$year = @file_get_contents('./data/last-search-year.log');
 
 if (!$start) {
   $start = 0;
 }
 
-for ($i = 0;; $i++) {
-    $html = fetch_arxiv_results($start);
+for (; $year < 2024; ++$year) {
+  for ($i = 0;; $i++) {
+    $html = fetch_arxiv_results($year, $start);
     $paperInfo = parse_html($html);
+    
+    if (count($paperInfo) === 0) {
+      break;
+    }
     
     // Process or print the paper information
     foreach ($paperInfo as $info) {
@@ -101,6 +107,10 @@ for ($i = 0;; $i++) {
 
     $start += 200; // Assuming 200 is the pagination step
     file_put_contents('./data/last-search-start.log', $start);
+    file_put_contents('./data/last-search-year.log', $year);
+  }
+
+  $start = 0;
 }
 
 ?>
