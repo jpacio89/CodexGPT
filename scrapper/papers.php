@@ -48,22 +48,30 @@ function parse_html($html) {
 
     // Iterate through each paper and extract details
     foreach ($papers as $paper) {
-        $titleNode = $xpath->query(".//p[contains(@class, 'title')]", $paper)->item(0);
+        $titleNode = $xpath->query(".//p[contains(@class, 'title is-5')]", $paper)->item(0);
         $linkNode = $xpath->query(".//p[contains(@class, 'list-title')]/a", $paper)->item(0);
         $doiNode = $xpath->query(".//span[contains(@class, 'tag') and contains(text(), 'doi')]/following-sibling::span", $paper)->item(0);
         $abstractNode = $xpath->query(".//p[contains(@class, 'abstract')]", $paper)->item(0);
+        $pdfLinkNode = $xpath->query(".//p[contains(@class, 'list-title')]/span/a[contains(@href, '/pdf/')]", $paper)->item(0);
 
-        $title = $titleNode ? trim($titleNode->textContent) : 'No title found';
-        $doi = $doiNode ? trim($doiNode->textContent) : 'No DOI found';
-        $abstract = $abstractNode ? trim($abstractNode->textContent) : 'No abstract found';
-        $link = $linkNode ? trim($linkNode->getAttribute('href')) : 'No link found';
+        $title = $titleNode ? trim($titleNode->textContent) : NULL;
+        $doi = $doiNode ? trim($doiNode->textContent) : NULL;
+        $abstract = $abstractNode ? trim($abstractNode->textContent) : NULL;
+        $link = $linkNode ? trim($linkNode->getAttribute('href')) : NULL;
+        $pdfLink = $pdfLinkNode ? trim($pdfLinkNode->getAttribute('href')) : NULL;
+        $ePrintLink = str_replace("/pdf/", "/e-print/", $pdfLink);
 
-        // Add to results array
+        if (!$link || !$doi) {
+          continue;
+        }
+        
         $results[] = [
             'title' => $title,
             'doi' => $doi,
             'link' => $link,
-            'abstract' => $abstract
+            'abstract' => $abstract,
+            'pdf' => $pdfLink,
+            'e-print' => $ePrintLink,
         ];
     }
 
@@ -81,7 +89,8 @@ for ($i = 0; $i < $max_iterations; $i++) {
     foreach ($paperInfo as $info) {
         echo "Title: " . $info['title'] . "\n";
         echo "DOI: " . $info['doi'] . "\n";
-        echo "Link: " . $info['link'] . "\n\n";
+        echo "Link: " . $info['link'] . "\n";
+        echo "Source: " . $info['e-print'] . "\n\n";
     }
 
     $start += 200; // Assuming 200 is the pagination step
