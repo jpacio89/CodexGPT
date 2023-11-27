@@ -64,12 +64,12 @@ function parse_html($html) {
         if (!$link || !$doi) {
           continue;
         }
-        
+
         $results[] = [
             'title' => $title,
             'doi' => $doi,
             'link' => $link,
-            'abstract' => $abstract,
+            //'abstract' => $abstract,
             'pdf' => $pdfLink,
             'e-print' => $ePrintLink,
         ];
@@ -79,9 +79,13 @@ function parse_html($html) {
 }
 
 // Example usage
-$start = 0;
-$max_iterations = 10; // Define how many pages you want to iterate through
-for ($i = 0; $i < $max_iterations; $i++) {
+$start = @file_get_contents('./data/last-search-start.log');
+
+if (!$start) {
+  $start = 0;
+}
+
+for ($i = 0;; $i++) {
     $html = fetch_arxiv_results($start);
     $paperInfo = parse_html($html);
     
@@ -91,9 +95,12 @@ for ($i = 0; $i < $max_iterations; $i++) {
         echo "DOI: " . $info['doi'] . "\n";
         echo "Link: " . $info['link'] . "\n";
         echo "Source: " . $info['e-print'] . "\n\n";
+        $jsonInfo = json_encode($info);
+        file_put_contents('./data/search.jsons', $jsonInfo . PHP_EOL, FILE_APPEND);
     }
 
     $start += 200; // Assuming 200 is the pagination step
+    file_put_contents('./data/last-search-start.log', $start);
 }
 
 ?>
