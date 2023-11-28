@@ -1,7 +1,11 @@
 <?php
 
 function fetch_arxiv_results($year, $start) {
-    $url = 'https://arxiv.org/search/?query=a&searchtype=all&abstracts=show&order=announced_date_first&size=200&date-date_type=submitted_date&date-year='.$year.'&start=' . $start;
+    $url = 'https://arxiv.org/search/advanced?advanced=&terms-0-operator=AND&terms-0-term=a&terms-0-field=all&classification-physics_archives=all&classification-include_cross_list=include&date-year=&date-filter_by=date_range&date-from_date=1991-02&date-to_date=1991-02&date-date_type=submitted_date&abstracts=show&size=200&order=announced_date_first' . $start;
+    //$url = 'https://arxiv.org/search/advanced?advanced=&terms-0-operator=AND&terms-0-term=a&terms-0-field=all&classification-physics_archives=all&classification-include_cross_list=include&date-filter_by=specific_year&date-year='.$year.'&date-from_date=&date-to_date=&date-date_type=submitted_date&abstracts=show&size=200&order=announced_date_first'.'&start=' . $start;
+    //$url = 'https://arxiv.org/search/?query=a&searchtype=all&abstracts=show&order=announced_date_first&size=200&date-date_type=submitted_date&date-year='.$year.'&start=' . $start;
+
+    echo $url . PHP_EOL;
 
     // Initialize cURL session
     $ch = curl_init($url);
@@ -59,7 +63,7 @@ function parse_html($html) {
         $abstract = $abstractNode ? trim($abstractNode->textContent) : NULL;
         $link = $linkNode ? trim($linkNode->getAttribute('href')) : NULL;
         $pdfLink = $pdfLinkNode ? trim($pdfLinkNode->getAttribute('href')) : NULL;
-        $ePrintLink = str_replace("/pdf/", "/e-print/", $pdfLink);
+        $ePrintLink = $pdfLink ? str_replace("/pdf/", "/e-print/", $pdfLink) : NULL;
 
         if (!$link || !$doi) {
           continue;
@@ -97,10 +101,11 @@ for (; $year < 2024; ++$year) {
     
     // Process or print the paper information
     foreach ($paperInfo as $info) {
-        echo "Title: " . $info['title'] . "\n";
-        echo "DOI: " . $info['doi'] . "\n";
-        echo "Link: " . $info['link'] . "\n";
-        echo "Source: " . $info['e-print'] . "\n\n";
+        //echo $year . PHP_EOL;
+        //echo "Title: " . $info['title'] . "\n";
+        //echo "DOI: " . $info['doi'] . "\n";
+        //echo "Link: " . $info['link'] . "\n";
+        //echo "Source: " . $info['e-print'] . "\n\n";
         $jsonInfo = json_encode($info);
         file_put_contents('./data/search.jsons', $jsonInfo . PHP_EOL, FILE_APPEND);
     }
