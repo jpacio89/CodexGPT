@@ -1,10 +1,8 @@
 <?php
 
-function fetch_arxiv_results($year, $start) {
-    $url = 'https://arxiv.org/search/advanced?advanced=&terms-0-operator=AND&terms-0-term=a&terms-0-field=all&classification-physics_archives=all&classification-include_cross_list=include&date-year=&date-filter_by=date_range&date-from_date=1991-02&date-to_date=1991-02&date-date_type=submitted_date&abstracts=show&size=200&order=announced_date_first' . $start;
-    //$url = 'https://arxiv.org/search/advanced?advanced=&terms-0-operator=AND&terms-0-term=a&terms-0-field=all&classification-physics_archives=all&classification-include_cross_list=include&date-filter_by=specific_year&date-year='.$year.'&date-from_date=&date-to_date=&date-date_type=submitted_date&abstracts=show&size=200&order=announced_date_first'.'&start=' . $start;
-    //$url = 'https://arxiv.org/search/?query=a&searchtype=all&abstracts=show&order=announced_date_first&size=200&date-date_type=submitted_date&date-year='.$year.'&start=' . $start;
-
+function fetch_arxiv_results($date, $start) {
+    $url = 'https://arxiv.org/search/advanced?advanced=&terms-0-operator=AND&terms-0-term=a&terms-0-field=all&classification-physics_archives=all&classification-include_cross_list=include&date-filter_by=date_range&date-from_date=' . $date . '&date-to_date=' . $date . '&date-date_type=submitted_date&abstracts=show&size=200&order=announced_date_first&start=' . $start;
+    
     echo $url . PHP_EOL;
 
     // Initialize cURL session
@@ -65,7 +63,7 @@ function parse_html($html) {
         $pdfLink = $pdfLinkNode ? trim($pdfLinkNode->getAttribute('href')) : NULL;
         $ePrintLink = $pdfLink ? str_replace("/pdf/", "/e-print/", $pdfLink) : NULL;
 
-        if (!$link || !$doi) {
+        if (!$link || !$title) {
           continue;
         }
 
@@ -84,38 +82,43 @@ function parse_html($html) {
 
 // Example usage
 $start = @file_get_contents('./data/last-search-start.log');
-$year = @file_get_contents('./data/last-search-year.log');
+$date = @file_get_contents('./data/last-search-date.log');
 
-if (!$start) {
-  $start = 0;
+if (!$date) {
+    $date = '1991-02'; // Default start date
 }
 
-for (; $year < 2024; ++$year) {
-  for ($i = 0;; $i++) {
-    $html = fetch_arxiv_results($year, $start);
-    $paperInfo = parse_html($html);
-    
-    if (count($paperInfo) === 0) {
-      break;
-    }
-    
-    // Process or print the paper information
-    foreach ($paperInfo as $info) {
-        //echo $year . PHP_EOL;
-        //echo "Title: " . $info['title'] . "\n";
-        //echo "DOI: " . $info['doi'] . "\n";
-        //echo "Link: " . $info['link'] . "\n";
-        //echo "Source: " . $info['e-print'] . "\n\n";
-        $jsonInfo = json_encode($info);
-        file_put_contents('./data/search.jsons', $jsonInfo . PHP_EOL, FILE_APPEND);
+if (!$start) {
+  $start = 0; // Default start date
+}
+
+while ($date < '2024-01') { // Assuming you want to stop at the end of 2023
+    for ($i = 0;; $i++) {
+        $html = fetch_arxiv_results($date, $start);
+        $paperInfo = parse_html($html);
+        
+        print_r($paperInfo);
+        
+        if (count($paperInfo) === 0) {
+            break;
+        }
+        
+        // Process or print the paper information
+        foreach ($paperInfo as $info) {
+            $jsonInfo = json_encode($info);
+            file_put_contents('./data/search.jsons', $jsonInfo . PHP_EOL, FILE_APPEND);
+        }
+
+        $start += 200; // Assuming 200 is the pagination step
+        file_put_contents('./data/last-search-start.log', $start);
     }
 
-    $start += 200; // Assuming 200 is the pagination step
-    file_put_contents('./data/last-search-start.log', $start);
-    file_put_contents('./data/last-search-year.log', $year);
-  }
-
-  $start = 0;
+    // Increment the month
+    $dateObj = DateTime::createFromFormat('Y-m', $date);
+    $dateObj->modify('first day of next month');
+    $date = $dateObj->format('Y-m');
+    file_put_contents('./data/last-search-date.log', $date);
+    $start = 0; // Reset start for the new month
 }
 
 ?>
