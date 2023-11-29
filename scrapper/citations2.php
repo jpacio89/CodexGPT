@@ -1,11 +1,25 @@
 <?php
+$outputDir = './data/docs';
 $filename = './data/search.jsons';
 $handle = fopen($filename, "r");
-$i = 1;
+$id = -1;
+
+$start = @file_get_contents('./data/last-docs-start.log');
+
+if (!$start) {
+    $start = 0;
+} else {
+    $start++;
+}
 
 if ($handle) {
     while (($line = fgets($handle)) !== false) {
-        sleep(5);
+        $id++;
+
+        if ($id < $start) {
+            echo "Skipping $id \n";
+            continue;
+        }
 
         // Decode each line into a PHP array
         $decodedLine = json_decode($line, true);
@@ -14,6 +28,7 @@ if ($handle) {
             echo "Error decoding JSON: " . json_last_error_msg() . "\n";
         } else {
             // Process the PHP array as needed
+            $title = $decodedLine['title'];
             $ePrint = $decodedLine['e-print'];
 
             $command = "curl '".$ePrint."' "
@@ -37,40 +52,31 @@ if ($handle) {
 
             $output = shell_exec($command);
 
-            echo $output;
-            $uuid = generateUUIDv4();
-            file_put_contents('./data/papers/' . $uuid . '.paper', $output);
+            echo $output . PHP_EOL;
 
+            $tree = implode('/', [
+                mt_rand(0,50),
+                mt_rand(0,50),
+                mt_rand(0,50),
+                mt_rand(0,50)
+            ]);
+            $directoryPath = $outputDir . '/' . $tree;
 
-            // Define the pattern to search for '\paper{...}'
-            $pattern = '/\\\\paper\s(.*)/';
-
-            // Array to hold matches
-            $matches = [];
-
-            // Search for all matches
-            preg_match_all($pattern, $output, $matches);
-
-            // $matches[1] will contain all the 'some_text' parts from '\paper{some_text}'
-            foreach ($matches[1] as $match) {
-                echo "Found: " . $match . "\n";
+            if (!file_exists($directoryPath)) {
+                mkdir($directoryPath, 0777, true);
             }
             
+            echo "Saving $id \n";
+            $decodedLine['id'] = $id;
+            $decodedLine['tree'] = $tree;
+            $filePath = $directoryPath . '/' . $id . '.paper';            
+            file_put_contents($filePath, $output);
+            file_put_contents('./data/docs.jsons', json_encode($decodedLine) . PHP_EOL, FILE_APPEND);
+            file_put_contents('./data/last-docs-start.log', $id);
+
             echo "\n\n\n\n\n";
         }
     }
-}
-
-function generateUUIDv4() {
-    $data = openssl_random_pseudo_bytes(16);
-
-    // Set version to 0100 (UUID version 4)
-    $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-    // Set bits 6-7 to 10
-    $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-
-    // Output the 36 character UUID.
-    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
 
 ?>
