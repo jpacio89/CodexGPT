@@ -54,6 +54,9 @@ while (!feof($handle)) {
         }
 
         $ePrint = $decodedLine['e-print'];
+
+        echo $ePrint . PHP_EOL;
+        
         $ch = curl_init($ePrint);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -86,7 +89,7 @@ while (!feof($handle)) {
             echo "Something is fishy!!\n";
             sleep(5);
         }
-        
+
         echo $output . PHP_EOL;
         
         curl_multi_remove_handle($mh, $ch);
