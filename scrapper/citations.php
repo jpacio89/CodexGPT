@@ -52,6 +52,8 @@ function parseCsvFiles($directory, $docs) {
               if (isset($docs[$cited])) {
                 $docs[$cited]['citing'][] = $citing;
                 echo $cited . ' -> ' . $citing . PHP_EOL;
+                //file_put_contents('./data/docs-with-citations.jsons', json_encode($docs));
+                file_put_contents('./data/citations.jsons', json_encode([$cited, $citing]) . PHP_EOL, FILE_APPEND);
               }
 
               $paperCount++;
