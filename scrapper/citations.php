@@ -3,7 +3,7 @@
 $docs = getArxivDocs();
 
 //$directory = '/Volumes/Alpha/data/citation_metadata/csv';
-$directory = '/Volumes/Gondor/data/citation_metadata/csv';
+$directory = '/Volumes/Beta/data/citations/csv';
 $papers = parseCsvFiles($directory, $docs);
 print_r($papers);
 

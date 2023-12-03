@@ -2,7 +2,7 @@
 
 $docs = getArxivDocs();
 
-$directory = '/Volumes/Alpha/data/paper_metadata_csv_dump_2023-10-22';
+$directory = '/Volumes/Beta/data/papers-metadata';
 $papers = parseCsvFiles($directory, $docs);
 print_r($papers);
 
@@ -45,6 +45,7 @@ function parseCsvFiles($directory, $docs) {
           while (($data = fgetcsv($handle, 10000, ",")) !== FALSE) {
               // Extract title and omid
               $title = $data[1] ?? '';
+              $pub_date = $data[7] ?? '';
               $omid = '';
 
               if (preg_match('/omid:([a-zA-Z0-9\/]+)/', $data[0], $matches)) {
@@ -54,13 +55,15 @@ function parseCsvFiles($directory, $docs) {
               // Add to papers array
               $paper = [
                 'title' => $title,
-                'omid' => $omid
+                'omid' => $omid,
+                'pub_date' => $pub_date,
               ];
 
               $lowerTitle = strtolower($paper['title']);
 
               if (isset($docs[$lowerTitle])) {
                 $docs[$lowerTitle]['omid'] = $paper['omid'];
+                $docs[$lowerTitle]['pub_date'] = $paper['pub_date'];
                 //$papers[] = $docs[$lowerTitle];
                 print_r($paper);
                 file_put_contents('./data/docs-with-omid.jsons', json_encode($docs[$lowerTitle]) . PHP_EOL, FILE_APPEND);
