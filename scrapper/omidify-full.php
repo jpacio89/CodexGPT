@@ -69,7 +69,7 @@ function parseCsvFiles($directory) {
 
               $papers[$paper['titleLowerCase']] = $paper;
 
-              if ($paperCount % 200000 === 0) {
+              if ($paperCount % 100000 === 0) {
                 getArxivDocs($papers);
                 $papers = [];
               }
