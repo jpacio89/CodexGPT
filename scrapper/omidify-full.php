@@ -3,34 +3,39 @@
 // NOTE:
 // STEP 3: add the pub_date and omid to the json data gathered in step 1 and store in docs-with-omid.jsons
 
-$docs = getArxivDocs();
-
 $directory = '/Volumes/Beta/data/papers-metadata';
-$papers = parseCsvFiles($directory, $docs);
+$papers = parseCsvFiles($directory);
 print_r($papers);
 
-function getArxivDocs() {
+function getArxivDocs($papers) {
   $filename = './data/search.jsons';
   $handle = fopen($filename, "r");
-  $docs = [];
+  $doc = false;
 
   if ($handle) {
     while (($line = fgets($handle)) !== false) {
       $decodedLine = json_decode($line, true);
-  
+      $lcTitle = strtolower($decodedLine['title']);
+
       if ($decodedLine === null) {
         echo "Error decoding JSON: " . json_last_error_msg() . "\n";
-      } else {
-        $docs[strtolower($decodedLine['title'])] = $decodedLine;
+        continue;
+      } else if (isset($papers[$lcTitle])) {
+        $merged = array_merge($papers[$lcTitle], $decodedLine);
+        unset($merged['titleLowerCase']);
+        print_r($merged);
+        file_put_contents('./data/docs-with-omid-full.jsons', json_encode($merged) . PHP_EOL, FILE_APPEND);
       }
     }
+    fclose($handle);
+    return $doc;
   }
 
-  return $docs;
+  return false;
 }
 
 
-function parseCsvFiles($directory, $docs) {
+function parseCsvFiles($directory) {
   $papers = [];
 
   // Find all CSV files in the specified directory
@@ -38,10 +43,10 @@ function parseCsvFiles($directory, $docs) {
 
   $i = 0;
   $fileCount = count($csvFiles);
+  $paperCount = 0;
 
   foreach ($csvFiles as $file) {
-      echo 'File ' . $i . '/' . $fileCount . PHP_EOL;
-      $paperCount = 0;
+      echo 'File ' . $i . '/' . $fileCount . PHP_EOL;    
 
       // Open the CSV file
       if (($handle = fopen($file, "r")) !== FALSE) {
@@ -57,19 +62,16 @@ function parseCsvFiles($directory, $docs) {
 
               // Add to papers array
               $paper = [
-                'title' => $title,
+                'titleLowerCase' => strtolower($title),
                 'omid' => $omid,
                 'pub_date' => $pub_date,
               ];
 
-              $lowerTitle = strtolower($paper['title']);
+              $papers[$paper['titleLowerCase']] = $paper;
 
-              if (isset($docs[$lowerTitle])) {
-                $docs[$lowerTitle]['omid'] = $paper['omid'];
-                $docs[$lowerTitle]['pub_date'] = $paper['pub_date'];
-                //$papers[] = $docs[$lowerTitle];
-                print_r($paper);
-                file_put_contents('./data/docs-with-omid.jsons', json_encode($docs[$lowerTitle]) . PHP_EOL, FILE_APPEND);
+              if ($paperCount % 200000 === 0) {
+                getArxivDocs($papers);
+                $papers = [];
               }
 
               $paperCount++;
@@ -80,6 +82,11 @@ function parseCsvFiles($directory, $docs) {
       }
 
       $i++;
+  }
+
+  if (count(array_keys($papers)) > 0) {
+    getArxivDocs($papers);
+    $papers = [];
   }
 
   return $papers;
