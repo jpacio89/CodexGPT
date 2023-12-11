@@ -1,5 +1,8 @@
 <?php
 
+// NOTE:
+// STEP 1: collect the data and store it in search.jsons
+
 function fetch_arxiv_results($date, $start) {
     $url = 'https://arxiv.org/search/advanced?advanced=&terms-0-operator=AND&terms-0-term=a&terms-0-field=all&classification-physics_archives=all&classification-include_cross_list=include&date-filter_by=date_range&date-from_date=' . $date . '&date-to_date=' . $date . '&date-date_type=submitted_date&abstracts=show&size=200&order=announced_date_first&start=' . $start;
     

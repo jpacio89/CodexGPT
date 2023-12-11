@@ -1,5 +1,8 @@
 <?php
 
+// NOTE:
+// STEP 2: download the paper e-print and iif successful store in docs.jsons
+
 $outputDir = '/Volumes/Alpha/data/docs';
 $filename = './data/search.jsons';
 $batchSize = 10; // Number of lines to read and process at a time

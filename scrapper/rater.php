@@ -1,8 +1,11 @@
 <?php
 
+// NOTE:
+// STEP 5: calculate citation scores for every paper given a certain depth
+
 $docs = getArxivDocs();
 $graph = getCitations();
-$level = 10;
+$level = 15;
 
 $listSize = 0;
 

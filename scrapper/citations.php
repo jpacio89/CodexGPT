@@ -1,9 +1,12 @@
 <?php
 
+// NOTE:
+// STEP 4: for all papers in the docs-with-omid.jsons file, determine which papers cite them an store in citations.jsons
+
 $docs = getArxivDocs();
 
 //$directory = '/Volumes/Alpha/data/citation_metadata/csv';
-$directory = '/Volumes/Beta/data/citations/csv';
+$directory = '/Volumes/Gondor/data/citation_metadata/csv';
 $papers = parseCsvFiles($directory, $docs);
 print_r($papers);
 
