@@ -74,6 +74,12 @@ function parseCsvFiles($directory) {
                 $miniBuffer = getArxivDocs($citations);
                 $fileBuffer = array_merge($fileBuffer, $miniBuffer);
                 $citations = [];
+
+                //foreach ($fileBuffer as $row) {
+                //  echo $row[0] . ' -> ' . $row[1] . PHP_EOL;        
+                //  file_put_contents('./data/citations-full.jsons', json_encode($row) . PHP_EOL, FILE_APPEND);
+                //}
+                //$fileBuffer = [];
               }
 
               $citationCount++;
@@ -83,7 +89,7 @@ function parseCsvFiles($directory) {
       }
 
       foreach ($fileBuffer as $row) {
-        echo $cited . ' -> ' . $citing . PHP_EOL;        
+        echo $row[0] . ' -> ' . $row[1] . PHP_EOL;     
         file_put_contents('./data/citations-full.jsons', json_encode($row) . PHP_EOL, FILE_APPEND);
       }
 
